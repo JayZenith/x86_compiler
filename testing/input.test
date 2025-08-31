@@ -1,0 +1,13 @@
+let x = 2 + 1;
+let y = x + 7;
+let z = 2 + 1;
+let d = 2 + 1;
+let e = 2 + 1;
+let w = 2 + 1;
+let q = 2 + 1;
+let a = 2 + 1;
+let n = 2 + 1;
+let h = 2 + 1;
+let m = 2 + 1;
+
+leave(y);

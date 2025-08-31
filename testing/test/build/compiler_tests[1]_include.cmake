@@ -1,0 +1,5 @@
+if(EXISTS "/home/jay-zenith/Desktop/x86_compiler/testing/test/build/compiler_tests[1]_tests.cmake")
+  include("/home/jay-zenith/Desktop/x86_compiler/testing/test/build/compiler_tests[1]_tests.cmake")
+else()
+  add_test(compiler_tests_NOT_BUILT compiler_tests_NOT_BUILT)
+endif()

@@ -1,0 +1,5 @@
+add_test([=[CompilerTest.CompilerOutputMatchesExpected]=]  /home/jay-zenith/Desktop/x86_compiler/testing/test/build/compiler_tests [==[--gtest_filter=CompilerTest.CompilerOutputMatchesExpected]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[CompilerTest.CompilerOutputMatchesExpected]=]  PROPERTIES WORKING_DIRECTORY /home/jay-zenith/Desktop/x86_compiler/testing/test/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+add_test([=[CompilerTest.AssemblyCanBeAssembledWithNASM]=]  /home/jay-zenith/Desktop/x86_compiler/testing/test/build/compiler_tests [==[--gtest_filter=CompilerTest.AssemblyCanBeAssembledWithNASM]==] --gtest_also_run_disabled_tests)
+set_tests_properties([=[CompilerTest.AssemblyCanBeAssembledWithNASM]=]  PROPERTIES WORKING_DIRECTORY /home/jay-zenith/Desktop/x86_compiler/testing/test/build SKIP_REGULAR_EXPRESSION [==[\[  SKIPPED \]]==])
+set(  compiler_tests_TESTS CompilerTest.CompilerOutputMatchesExpected CompilerTest.AssemblyCanBeAssembledWithNASM)
