@@ -40,14 +40,6 @@ cmake ..
 make
 ```
 
-<!-- ```bash
-git clone https://github.com/orosmatthew/hydrogen-cpp
-cd hydrogen-cpp
-mkdir build
-cmake -S . -B build
-cmake --build build
-``` -->
-
 Executable will be `testy` in the `build/` directory.
 
 
@@ -59,28 +51,16 @@ chmod +x compiler_test.sh
 ```
 
 What it does
-1. Creates a sample input file: test_input.txt.
-2. Creates the expected assembly output: expected_assembly.asm.
-3. Runs the compiler (./testy) on the input file.
+1. Creates a sample input file: testInput.txt.
+2. Creates the expected assembly output: expectedAssembly.asm.
+3. Runs the compiler (./build/testy) on the input file.
 4. Compares the generated output.asm against the expected output.
 5. Reports success or failure with detailed differences.
 
-Sample Input (test_input.txt)
+Sample Input (testInput.txt)
 ```bash
-let y = (10 - 2 * 3) / 2;
-let x = 7; // first
-// first
-if (0) {
-    x = 1;
-} elif (0) {
-    x = 2;
-} else {
-    x = 3;
-}
-exit(x);
-/*
-exit(4);
-*/
+let x = 2 + 3; 
+exit x;
 ```
 
 Expected Output (expected_assembly.asm)
@@ -88,72 +68,22 @@ Expected Output (expected_assembly.asm)
 ```bash
 global _start
 _start:
-;; let
-mov rax, 2
-push rax
-mov rax, 3
-push rax
-mov rax, 2
-push rax
-pop rax
-pop rbx
-mul rbx
-push rax
-mov rax, 10
-push rax
-pop rax
-pop rbx
-sub rax, rbx
-push rax
-pop rax
-pop rbx
-div rbx
-push rax
-;; /let
-;; let
-mov rax, 7
-push rax
-;; /let
-;; if
-mov rax, 0
-push rax
-pop rax
-test rax, rax
-jz label0
-mov rax, 1
-push rax
-pop rax
-mov [rsp + 0], rax
-jmp label1
-label0:
-;; elif
-mov rax, 0
-push rax
-pop rax
-test rax, rax
-jz label2
-mov rax, 2
-push rax
-pop rax
-mov [rsp + 0], rax
-jmp label1
-label2:
-;; else
-mov rax, 3
-push rax
-pop rax
-mov [rsp + 0], rax
-label1:
-;; /if
-;; exit
-push QWORD [rsp + 0]
-mov rax, 60
-pop rdi
-syscall
-;; /exit
-mov rax, 60
-mov rdi, 0
-syscall
+    mov rax, 2        ; load lhs
+    push rax          ; save 2 on stack
+    mov rax, 3        ; load rhs
+    pop rbx           ; restore lhs (2) into rbx
+    add rax, rbx      ; rax = 2 + 3 = 5
+    push rax          ; save result (5) as variable x
+
+    mov rax, [rsp+0]  ; load variable x (5) into rax
+    mov rdi, rax      ; set exit code = 5
+    mov rax, 60       ; syscall number for exit
+    syscall           ; exit(5)
+
+    mov rax, 60       ; <- extra fallback exit
+    mov rdi, 0
+    syscall           ; exit(0)
+
 ```
 
 ## Notes

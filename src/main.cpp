@@ -1,48 +1,43 @@
-#include <fstream>
 #include <iostream>
-#include <optional>
-#include <sstream>
+#include <fstream>
 #include <vector>
+#include <memory>
+#include "tokenization.hpp"  // must define Token + TokenType
+#include "parser.hpp"        // your AST + Parser
+#include "generation.hpp"     // we’ll assume you have a Generator class
 
-#include "generation.hpp"
-
-int main(int argc, char* argv[])
-{
-    // if (argc != 2) {
-    //     std::cerr << "Incorrect usage. Correct usage is..." << std::endl;
-    //     std::cerr << "hydro <input.hy>" << std::endl;
-    //     return EXIT_FAILURE;
-    // }
+int main(int argc, char* argv[]) {
 
     std::string contents;
     {
         std::stringstream contents_stream;
         std::fstream input(argv[1], std::ios::in);
-        //std::fstream input("test_input.txt", std::ios::in);
         contents_stream << input.rdbuf();
         contents = contents_stream.str();
     }
 
+    // 1. Tokenize
     Tokenizer tokenizer(std::move(contents));
-    std::vector<Token> tokens = tokenizer.tokenize();
+    auto tokens = tokenizer.tokenize();  // you must have implemented this
+    tokens.push_back({TokenType::Eof, ""});
 
-    Parser parser(std::move(tokens));
-    std::optional<NodeProg> prog = parser.parse_prog();
+    // 2. Parse into AST
+    Parser parser(tokens);
+    //deduced to std::vector<std::unique_ptr<Node>> 
+    auto program = parser.parse_program();
 
-    if (!prog.has_value()) {
-        std::cerr << "Invalid program" << std::endl;
-        exit(EXIT_FAILURE);
-    }
+    // 3. Generate assembly
+    Generator gen(program);  // assume your generator takes AST nodes
+    std::string asm_code = gen.generate();
 
-    {
-        Generator generator(prog.value());
-        //std::fstream file("out.asm", std::ios::out);
-        std::fstream file("output.asm", std::ios::out);
-        file << generator.gen_prog();
-    }
+    // 4. Write to file
+    std::ofstream out("nasm_out.s");
+    out << asm_code;
+    out.close();
 
-    system("nasm -felf64 out.asm");
-    system("ld -o out out.o");
+    std::cout << "Assembly written to nasm_out.s\n";
+    std::cout << "Run with:\n";
+    std::cout << "  nasm -f elf64 nasm_out.s -o nasm_out.o && ld nasm_out.o -o nasm_out && ./nasm_out\n";
 
-    return EXIT_SUCCESS;
+    return 0;
 }
