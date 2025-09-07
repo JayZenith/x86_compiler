@@ -1,69 +1,55 @@
 # C++ Compiler Test Playground
 
-A small C++ compiler project with a unit test script to verify output assembly generation. The compiler reads a source file, translates it to x86-64 assembly, and writes the result to an output file. This project demonstrates variable handling, arithmetic, control flow, and basic code generation.
+A C++ compiler that translates a minimal language into x86-64 assembly for Linux.  
+Includes a unit test script to verify output. Demonstrates **AST construction, recursive descent parsing, stack-based variable management, arithmetic evaluation, control flow, and low-level code generation**.
 
 ## Directory Structure
 ```bash
 project-root/
 ├── build/ # CMake build directory
 ├── compiler_test.sh # Bash unit test script
-├── test_input.txt # Sample input source code
-├── expected_assembly.asm # Expected assembly output
+├── testInput.txt # Sample input source code
+├── expectedAssembly.asm # Expected assembly output
 ├── output.asm # Actual compiler output
 ├── CMakeLists.txt # Project build configuration
 └── src/ # Compiler source files
 ```
 
 
-## Building
-
-Requires `nasm` and `ld` on a Linux operating system.
-
+## Requirements 
+- Linux OS
+- `nasm` and `ld` installed.
 
 ## Building the Compiler
-
-1. Create a build directory (if not already created):
-
 ```bash
 mkdir -p build
 cd build
-```
-
-2. Run CMake to configure the project:
-
-```bash
 cmake ..
-```
-
-3. Build the project:
-```bash
 make
 ```
-
-Executable will be `testy` in the `build/` directory.
+The executable will be `testy` in the `build/` directory.
 
 
 ## Running the Unit Test
-The provided `compiler_test.sh` script automates testing:
 ```bash
 chmod +x compiler_test.sh
 ./compiler_test.sh
 ```
 
-What it does
-1. Creates a sample input file: testInput.txt.
-2. Creates the expected assembly output: expectedAssembly.asm.
+The script: 
+1. Creates a sample input file (testInput.txt).
+2. Creates the expected assembly output (expectedAssembly.asm).
 3. Runs the compiler (./build/testy) on the input file.
-4. Compares the generated output.asm against the expected output.
+4. Compares the generated nasm_out.s against the expected output.
 5. Reports success or failure with detailed differences.
 
-Sample Input (testInput.txt)
+## Sample Input (testInput.txt)
 ```bash
 let x = 2 + 3; 
 exit x;
 ```
 
-Expected Output (expected_assembly.asm)
+## Expected Output (expectedAssembly.asm)
 
 ```bash
 global _start
@@ -88,7 +74,9 @@ _start:
 
 ## Notes
 
-- The compiler script assumes the executable is named testy and that it - reads test_input.txt and outputs output.asm.
+- The compiler script assumes the executable is named testy and that it - reads test_input.txt and outputs nasm_out.asm.
 - You can adjust the paths in compiler_test.sh if your compiler or file names differ.
-- The script normalizes whitespace to allow reliable comparisons.
+- Whitespace is normalized for reliable output comparison.
 - Designed for a local Linux environment; minor adjustments may be needed for Windows/MacOS.
+
+## 💥 Wala — x86 Compiler.
