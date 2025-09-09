@@ -61,8 +61,8 @@ private:
             case NodeType::Ident: {
                 auto ident = static_cast<NodeIdent*>(node);
                 int offset = m_vars[ident->name];
-                //offset*8 because each varaible is 8 bytes  (64-bit integer)
-                m_output << "    mov rax, [rsp + " << offset * 8 << "]\n"; 
+                // load variable at stack slot (rsp + offset*8)
+                m_output << "    mov rax, [rsp + " << offset * 8 << "]\n";
                 break;
             }
             case NodeType::BinExpr: {
