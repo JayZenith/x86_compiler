@@ -1,1 +1,2 @@
-let x = 2;
+let x = 2 + 3;
+exit x;

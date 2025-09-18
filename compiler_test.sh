@@ -19,20 +19,21 @@ EOF
 
 # Create expected output
 cat > "$EXPECTED_OUTPUT" <<'EOF'
+section .data
+x dq 0
+
+section .text
 global _start
+
 _start:
-    mov rax, 2  
-    push rax
+    mov rax, 2
+    mov rbx, rax
     mov rax, 3
-    pop rbx
     add rax, rbx
-    push rax
-    mov rax, [rsp + 0]
+    mov [x], rax
+    mov rax, [x]
     mov rdi, rax
     mov rax, 60
-    syscall
-    mov rax, 60
-    mov rdi, 0
     syscall
 EOF
 
