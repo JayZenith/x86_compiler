@@ -1,4 +1,4 @@
-# C++ Compiler Test Playground
+# x86-64 Compiler 
 
 A C++ compiler that translates a minimal language into x86-64 assembly for Linux.  
 Includes a unit test script to verify output. Demonstrates **AST construction, recursive descent parsing, variable management, arithmetic evaluation, control flow, and low-level code generation**.
