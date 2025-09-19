@@ -1,7 +1,7 @@
 # C++ Compiler Test Playground
 
 A C++ compiler that translates a minimal language into x86-64 assembly for Linux.  
-Includes a unit test script to verify output. Demonstrates **AST construction, recursive descent parsing, stack-based variable management, arithmetic evaluation, control flow, and low-level code generation**.
+Includes a unit test script to verify output. Demonstrates **AST construction, recursive descent parsing, variable management, arithmetic evaluation, control flow, and low-level code generation**.
 
 ## Directory Structure
 ```bash
@@ -14,7 +14,6 @@ project-root/
 ├── CMakeLists.txt # Project build configuration
 └── src/ # Compiler source files
 ```
-
 
 ## Requirements 
 - Linux OS
@@ -52,23 +51,24 @@ exit x;
 ## Expected Output (expectedAssembly.asm)
 
 ```bash
-global _start
+section .data    ; data section
+x dq 0           ; global var x (8 bytes) init. to 0
+
+section .text    ; text section
+global _start    ; global symbol _start
+
 _start:
-    mov rax, 2        ; load lhs
-    push rax          ; save 2 on stack
-    mov rax, 3        ; load rhs
-    pop rbx           ; restore lhs (2) into rbx
-    add rax, rbx      ; rax = 2 + 3 = 5
-    push rax          ; save result (5) as variable x
+    mov rax, 2   ; Load value 2 into register RAX
+    mov rbx, rax ; Copy RAX (2)into RBX
+    mov rax, 3   ; Overwrite RAX WITH 3 
+    add rax, rbx ; Add RBX (2) to RAX (3), Now: RAX = 5
+    mov [x], rax ; Store value fo RAX (5), in global var x
+    mov rax, [x] ; Load value of x (5) into RAX
+    mov rdi, rax ; Copy RAX (5) into RDI vital as Linux sys 
+                 ; calls pass 1st arg in RDI
+    mov rax, 60  ; Linux x86-64 syscall number 60 = exit
+    syscall      ; invoke syscall, termiante with exit code 5
 
-    mov rax, [rsp+0]  ; load variable x (5) into rax
-    mov rdi, rax      ; set exit code = 5
-    mov rax, 60       ; syscall number for exit
-    syscall           ; exit(5)
-
-    mov rax, 60       ; <- extra fallback exit
-    mov rdi, 0
-    syscall           ; exit(0)
 
 ```
 
@@ -79,4 +79,4 @@ _start:
 - Whitespace is normalized for reliable output comparison.
 - Designed for a local Linux environment; minor adjustments may be needed for Windows/MacOS.
 
-## 💥 Wala — x86 Compiler.
+## x86 Compiler.

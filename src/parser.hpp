@@ -32,8 +32,8 @@ struct NodeExit {
 
 // Tagged union node
 struct Node {
-    NodeType type;
-    union {
+    NodeType type; //The tag 
+    union { //All occupy the same memory space with taking largest possible 
         NodeIntLit int_lit;
         NodeIdent ident;
         NodeBinExpr bin_expr;
@@ -66,10 +66,22 @@ struct Node {
     }
 
      // Disable copy (for now)
-    Node(const Node&) = delete;
-    Node& operator=(const Node&) = delete;
+    // Any attempt for Node a = b; or a = b; fails as 
+    // node contains union-like members and copying unions
+    // safely is tricky as you need to know which member is active.
+    // = delete removes default copy constructor generation
+    Node(const Node&) = delete; //Specifically delete passing a Node in constructor
+    Node& operator=(const Node&) = delete; //Specifically rid of assigning nodes 
 
-    // Enable move
+    // Enable move constructor
+    /* Constructs new Node by "stealing" resources from other instead 
+    of copying them. Uses placement new to construct active union member in place.
+    std::move(other.xxx) allows internal members (like std::string, std::vector) to 
+    transfer ownserhip instead of copying
+
+    Node a(NodeIntLit(42));
+    Node b(std::move(a)); // ✅ Move constructor: b now owns the IntLit, a is in a valid but unspecified state
+    */
     Node(Node&& other) noexcept : type(other.type) {
         switch (type) {
         case NodeType::IntLit: new(&int_lit) NodeIntLit(std::move(other.int_lit)); break;
@@ -79,17 +91,23 @@ struct Node {
         case NodeType::Exit: new(&exit_stmt) NodeExit(std::move(other.exit_stmt)); break;
         }
     }
+    //This avoids expensive deep copies of strings, AST nodes, vectors, etc.
 
+    //Move assignment
     Node& operator=(Node&& other) noexcept {
-        if (this != &other) {
-            this->~Node();
-            new (this) Node(std::move(other));
+        if (this != &other) { //prevent self-move (which would otherwise destroy the object before moving).
+            this->~Node();   // Destroy current contents
+            new (this) Node(std::move(other)); // Move-construct in place
         }
         return *this;
     }
+    /* 
+    Node a(NodeIntLit(5));
+    Node b(NodeIdent("x"));
+
+    b = std::move(a); // ✅ b now becomes IntLit(5), a is in a valid but unspecified state
+    */
 };
-
-
 
 class Parser {
 public:
@@ -99,12 +117,11 @@ public:
         std::vector<Node> stmts;
         while (!match(TokenType::Eof)) {
             //For let x = 2; I get Let Node with string pointing to ident, and expr pointing to int lit
-            if (check(TokenType::Let)) stmts.push_back(parse_let());
-            else if (check(TokenType::Exit)) stmts.push_back(parse_exit());
+            if (check(TokenType::Let)) stmts.push_back(parse_let()); //Will be a Node with a ident string and Node ptr to expression
+            else if (check(TokenType::Exit)) stmts.push_back(parse_exit()); //Just a Node with a Node ptr to expression
         }
         return stmts;
     }
-    
 
 private:
     size_t m_index = 0;
@@ -114,7 +131,7 @@ private:
     bool check(TokenType t) { return m_tokens[m_index].type == t; }
     Token consume() { return m_tokens[m_index++]; }
 
-    Node parse_expr() {
+    Node parse_expr() { //Specifically to look for unary or binary expression
         auto lhs = std::make_unique<Node>(parse_primary()); //deduces to std::unique_ptr<Node>
         while (check(TokenType::Plus) || check(TokenType::Minus) || check(TokenType::Star) || check(TokenType::Slash)) {
             std::string op = consume().value;
@@ -138,7 +155,7 @@ private:
         consume(); // let
         std::string name = consume().value;
         consume(); // =
-        auto expr = std::make_unique<Node>(parse_expr());
+        auto expr = std::make_unique<Node>(parse_expr()); //Node that expr's start use of pointers 
         consume(); // ;
         return Node(std::move(name), std::move(expr));
     }
@@ -150,7 +167,6 @@ private:
         return Node(std::move(expr));    
     }
 };
-
 
 
 
