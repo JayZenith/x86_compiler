@@ -3,45 +3,27 @@
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
-INPUT_FILE="textInput.txt"
-EXPECTED_OUTPUT="expectedAssembly.asm"
+INPUT_FILE="./test_input_files/test_input_1.txt"
+EXPECTED_OUTPUT="./test_output_files/test_output_1.asm"
 ACTUAL_OUTPUT="nasm_out.s"
 COMPILER="./build/testy"
 
+# Check that compiler exists
+# [ ... ] is a Bash Test and -f "$COMPILER" checks if file exists
+# echo -e -> print text w/ escape sequences (\n, colors, etc.)
 [ ! -f "$COMPILER" ] && { echo -e "${RED}Compiler not found: $COMPILER${NC}"; exit 1; }
+# Make compiler executable
+# 2>&1 -> redirect stderr to stdout 
 chmod +x "$COMPILER" 2>/dev/null
-
-# Create test input
-cat > "$INPUT_FILE" <<'EOF'
-let x = 2 + 3;
-exit x;
-EOF
-
-# Create expected output
-cat > "$EXPECTED_OUTPUT" <<'EOF'
-section .data
-x dq 0
-
-section .text
-global _start
-
-_start:
-    mov rax, 2
-    mov rbx, rax
-    mov rax, 3
-    add rax, rbx
-    mov [x], rax
-    mov rax, [x]
-    mov rdi, rax
-    mov rax, 60
-    syscall
-EOF
 
 # Normalize whitespace function
 normalize() { sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' -e 's/[[:space:]]\+/ /g' "$1" > "$1.n"; }
 
 # --- Run compiler ---
 echo -e "${YELLOW}Running compiler...${NC}"
+# capture stdout and stderr into OUTPUT variable (2>&1 -> redirect stderr to stdout)
+# [ $? -ne 0 ], $? stores exist status of last command
+# if compiled errored, print mesasage in red and exit script
 OUTPUT=$($COMPILER "$INPUT_FILE" 2>&1)
 [ $? -ne 0 ] && { echo -e "${RED}Compiler error:${NC}\n$OUTPUT"; exit 1; }
 
@@ -55,7 +37,10 @@ fi
 # --- Compare outputs ---
 normalize "$EXPECTED_OUTPUT"
 normalize "$ACTUAL_OUTPUT"
+#removes leading/trailing spaces and collapses multiple spaces for comparison
 
+
+# diff -Bw -> ignore blank lines, ignore whitespace differences and hide output (only care about exigt code for if)
 if diff -Bw "$EXPECTED_OUTPUT.n" "$ACTUAL_OUTPUT.n" >/dev/null; then
     echo -e "${GREEN}✅ TEST PASSED${NC}"
 else
@@ -64,3 +49,6 @@ else
     exit 1
 fi
 
+
+# After the comparison
+rm -f "$EXPECTED_OUTPUT.n" "$ACTUAL_OUTPUT.n"
