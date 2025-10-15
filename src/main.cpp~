@@ -47,7 +47,7 @@
 
 //     // 2. Parse into AST
 //     Parser parser(tokens);
-//     //deduced to std::vector<<Node>
+//     //deduced to std::vector<<PolyNode>
 
 //     auto start = std::chrono::high_resolution_clock::now();
 
@@ -85,7 +85,7 @@
 //     } else {
 
 //         // NASM assembly backend
-//         Generator gen(program);  // assume your generator takes AST nodes
+//         Generator gen(program);  // assume your generator takes AST PolyNodes
 //         std::string asm_code = gen.generate();
 //         auto end = std::chrono::high_resolution_clock::now();
 //         std::chrono::duration<double> elapsed = end - start;
@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
 
     // 2. Parse into AST
     Parser parser(tokens);
-    // deduced to std::vector<std::unique_ptr<Node>>
+    // deduced to std::vector<std::unique_ptr<PolyNode>>
 
     auto start = std::chrono::high_resolution_clock::now();
     auto program = parser.parse_program();
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
         // std::cout << "  ./out\n";
     } else {
         // NASM assembly backend
-        Generator gen(program); // assume your generator takes AST nodes
+        Generator gen(program); // assume your generator takes AST PolyNodes
         std::string asm_code = gen.generate();
 
         auto end = std::chrono::high_resolution_clock::now();

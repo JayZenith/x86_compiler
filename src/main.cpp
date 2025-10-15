@@ -8,8 +8,12 @@
 #include "tokenization.hpp"  // must define Token + TokenType
 #include "parser.hpp"        // your AST + Parser
 #include "generation.hpp"     // we’ll assume you have a Generator class
+
+#include "polyparser.hpp"
+#include "polygeneration.hpp"
 #include <chrono>
 
+std::vector<Token> generate_tokens(int num_vars);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
@@ -29,22 +33,39 @@ int main(int argc, char* argv[]) {
 
     // 1. Tokenize
     Tokenizer tokenizer(std::move(contents));
-    auto tokens = tokenizer.tokenize();//deduced to vector<Token> w
+    // auto tokens = tokenizer.tokenize();//deduced to vector<Token> w
+
+    int num_vars = 100000; // scale as needed for benchmarking
+    auto tokens = generate_tokens(num_vars);// Generate test tokens
 
     // 2. Parse into AST
     Parser parser(tokens); 
     
+    PolyParser polyparser(tokens);
+
     auto start = std::chrono::high_resolution_clock::now();
-
-    //deduced to std::vector<Node> 
+    //deduced to std::vector<PolyNode> 
     auto program = parser.parse_program();
-
     // NASM assembly backend 
-    Generator gen(program);  // assume your generator takes AST nodes
+    Generator gen(program);  // assume your generator takes AST PolyNodes
     std::string asm_code = gen.generate();
     auto end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = end - start;
-    std::cout << "Elapsed time: " << elapsed.count() << " s\n";
+    std::cout << "Tagged-union AST time: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+              << " ms\n";
+
+    auto start2 = std::chrono::high_resolution_clock::now();
+    //deduced to std::vector<PolyNode> 
+    auto program2 = polyparser.parse_program();
+    // NASM assembly backend 
+    PolyGenerator gen2(program2);  // assume your generator takes AST PolyNodes
+    std::string asm_code2 = gen2.generate();
+    auto end2 = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed2 = end2 - start2;
+    std::cout << "Poly AST time: "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2).count()
+              << " ms\n";
 
     // 4. Write to file
     std::ofstream out("nasm_out.s");
@@ -56,6 +77,45 @@ int main(int argc, char* argv[]) {
     std::cout << "  nasm -f elf64 nasm_out.s -o nasm_out.o && ld nasm_out.o -o nasm_out && ./nasm_out\n";
 
     return 0;
+}
+
+std::vector<Token> generate_tokens(int num_vars) {
+    std::vector<Token> tokens;
+
+    // Generate let statements: let x0 = 1 + 2; let x1 = x0 + 3; ...
+    for (int i = 0; i < num_vars; ++i) {
+        // let
+        tokens.push_back({TokenType::Let, "let"});
+        // identifier
+        tokens.push_back({TokenType::Ident, "x" + std::to_string(i)});
+        // =
+        tokens.push_back({TokenType::Eq, "="});
+
+        // left operand
+        if (i == 0)
+            tokens.push_back({TokenType::IntLit, "2"});
+        else
+            tokens.push_back({TokenType::Ident, "x" + std::to_string(i - 1)});
+
+        // operator
+        tokens.push_back({TokenType::Plus, "+"});
+
+        // right operand
+        tokens.push_back({TokenType::IntLit, std::to_string(3 + i)});
+
+        // ;
+        tokens.push_back({TokenType::Semi, ";"});
+    }
+
+    // exit statement: exit xN;
+    tokens.push_back({TokenType::Exit, "exit"});
+    tokens.push_back({TokenType::Ident, "x" + std::to_string(num_vars - 1)});
+    tokens.push_back({TokenType::Semi, ";"});
+
+    // EOF
+    tokens.push_back({TokenType::Eof, ""});
+
+    return tokens;
 }
 
 // #include <iostream>
@@ -111,7 +171,7 @@ int main(int argc, char* argv[]) {
 
 //     // 2. Parse into AST
 //     Parser parser(tokens);
-//     //deduced to std::vector<std::unique_ptr<Node>> 
+//     //deduced to std::vector<std::unique_ptr<PolyNode>> 
 
 //        auto start = std::chrono::high_resolution_clock::now();
 //     auto program = parser.parse_program();
@@ -146,7 +206,7 @@ int main(int argc, char* argv[]) {
 //     } else {
 
 //         // NASM assembly backend 
-//         Generator gen(program);  // assume your generator takes AST nodes
+//         Generator gen(program);  // assume your generator takes AST PolyNodes
 //         std::string asm_code = gen.generate();
 
 //             auto end = std::chrono::high_resolution_clock::now();
@@ -165,3 +225,6 @@ int main(int argc, char* argv[]) {
 
 //     return 0;
 // }
+
+
+
