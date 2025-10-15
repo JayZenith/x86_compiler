@@ -1,13 +1,47 @@
-# x86-64 Compiler 
+# x86-64 Compiler: Polymorphic vs. Tagged-Union AST
 
-A C++ compiler that translates a minimal language into x86-64 assembly for Linux.  
-Includes a unit test script to verify output. Demonstrates **AST construction, recursive descent parsing, variable management, arithmetic evaluation, control flow, and low-level code generation**.
+This project implements a mini compiler in C++ that:
+* Parses a small imperative scripting language
+* Builds an Abstract Syntax Tree (AST)
+* Generates x86 assembly from the AST
+* Compares two AST architectures:
+1. Polymorphic AST – classic base-class polymorphism with unique_ptr child nodes.
+2. Tagged-Union AST – union of node types with a manual destructor and move semantics.
+    * It uses the Tagged-Union AST Implementation for actual assembly generation 
+
+The compiler supports:
+* Integer arithmetic (+, -, *, /)
+* Variable bindings (let)
+* Program exit (exit)
+* Lexical scoping
+The focus is memory layout, performance trade-offs, and low-level C++ engineering.
+
+
+### AST Architectures
+Polymorphic AST
+* Base class PolyNode with derived types for literals, identifiers, expressions, let statements, and exit nodes.
+* Uses std::unique_ptr for child nodes.
+* Destructor automatically cleans up children — low overhead.
+
+Tagged-Union AST
+* Single Node struct with a NodeType tag and union of node types.
+* Manual destructor handles active member.
+* Move constructors and assignments carefully implemented for std::unique_ptr and strings.
+* Avoids virtual dispatch but incurs destructor overhead.
+
+### Performance & Profiling
+Benchmarking shows:
+* Tagged-Union AST: slower due to union destruction and string/unique_ptr moves.
+* Polymorphic AST: faster for node construction/destruction.
+Profiling via gprof confirms node destruction dominates runtime, with std::map lookups contributing significantly.
+* Key takeaway: AST design in a compiler involves trade-offs between dynamic dispatch, memory footprint, and move semantics.
 
 ## Directory Structure
 ```bash
 project-root/
 ├── build/ # CMake build directory
 ├── compiler_test.sh # Bash unit test script
+├── profiling.sh # Run gprof 
 ├── testInput.txt # Sample input source code
 ├── expectedAssembly.asm # Expected assembly output
 ├── output.asm # Actual compiler output
@@ -25,9 +59,10 @@ mkdir -p build
 cd build
 cmake ..
 make
+./testy ../test_input_files/test_input_1.txt
 ```
-The executable will be `testy` in the `build/` directory.
-
+* Outputs benchmark times for both AST implementations.
+* Generates x86 assembly (nasm_out.s) for further inspection.
 
 ## Running the Unit Test
 ```bash
@@ -73,7 +108,6 @@ _start:
 ```
 
 ## Notes
-
 - The compiler script assumes the executable is named testy and that it - reads test_input.txt and outputs nasm_out.asm.
 - You can adjust the paths in compiler_test.sh if your compiler or file names differ.
 - Whitespace is normalized for reliable output comparison.
