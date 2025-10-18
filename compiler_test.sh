@@ -3,10 +3,13 @@
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; YELLOW='\033[0;33m'; NC='\033[0m'
 
-INPUT_FILE="./test_input_files/test_input_1.txt"
-EXPECTED_OUTPUT="./test_output_files/test_output_1.asm"
-ACTUAL_OUTPUT="nasm_out.s"
-COMPILER="./build/testy"
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+INPUT_FILE="$SCRIPT_DIR/test_input_files/test_input_1.txt"
+EXPECTED_OUTPUT="$SCRIPT_DIR/test_output_files/test_output_1.asm"
+ACTUAL_OUTPUT="$SCRIPT_DIR/nasm_out.s"
+COMPILER="$SCRIPT_DIR/build/testy"
 
 # Check that compiler exists
 # [ ... ] is a Bash Test and -f "$COMPILER" checks if file exists

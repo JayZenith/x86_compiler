@@ -9,19 +9,25 @@
 #include "parser.hpp"        // your AST + Parser
 #include "generation.hpp"     // we’ll assume you have a Generator class
 
-#include "polyparser.hpp"
-#include "polygeneration.hpp"
+// #include "polyparser.hpp"
+// #include "polygeneration.hpp"
 #include <chrono>
 
 std::vector<Token> generate_tokens(int num_vars);
 
 int main(int argc, char* argv[]) {
     if (argc < 2) {
-        std::cerr << "Usage: " << argv[0] << " <source_file> \n";
+        std::cerr << "Usage: " << argv[0] << " <source_file> [--benchmark]\n";
         return 1;
     }
 
     std::string filename = argv[1];
+    bool benchmark = false;
+
+    // Check optional benchmark flag
+    if (argc >= 3 && std::string(argv[2]) == "--benchmark") {
+        benchmark = true;
+    }
 
     std::string contents;
     { 
@@ -31,17 +37,21 @@ int main(int argc, char* argv[]) {
         contents = ss.str();
     } // input's destructor runs to close file 
 
-    // 1. Tokenize
+    // Tokenize
     Tokenizer tokenizer(std::move(contents));
     // auto tokens = tokenizer.tokenize();//deduced to vector<Token> w
 
-    int num_vars = 100000; // scale as needed for benchmarking
-    auto tokens = generate_tokens(num_vars);// Generate test tokens
-
-    // 2. Parse into AST
+    std::vector<Token> tokens;
+    if (benchmark) {
+        int num_vars = 100000; // scale as needed for benchmarking
+        tokens = generate_tokens(num_vars);
+    } else {
+        tokens = tokenizer.tokenize();
+    }
+    // Parse into AST
     Parser parser(tokens); 
     
-    PolyParser polyparser(tokens);
+    // PolyParser polyparser(tokens);
 
     auto start = std::chrono::high_resolution_clock::now();
     //deduced to std::vector<PolyNode> 
@@ -50,24 +60,26 @@ int main(int argc, char* argv[]) {
     Generator gen(program);  // assume your generator takes AST PolyNodes
     std::string asm_code = gen.generate();
     auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
-    std::cout << "Tagged-union AST time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
-              << " ms\n";
 
-    auto start2 = std::chrono::high_resolution_clock::now();
-    //deduced to std::vector<PolyNode> 
-    auto program2 = polyparser.parse_program();
-    // NASM assembly backend 
-    PolyGenerator gen2(program2);  // assume your generator takes AST PolyNodes
-    std::string asm_code2 = gen2.generate();
-    auto end2 = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed2 = end2 - start2;
-    std::cout << "Poly AST time: "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2).count()
-              << " ms\n";
+    if (benchmark) {
+        std::cout << "Tagged-union AST time: "
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count()
+                  << " ms\n";
+    }
 
-    // 4. Write to file
+    // auto start2 = std::chrono::high_resolution_clock::now();
+    // //deduced to std::vector<PolyNode> 
+    // auto program2 = polyparser.parse_program();
+    // // NASM assembly backend 
+    // PolyGenerator gen2(program2);  // assume your generator takes AST PolyNodes
+    // std::string asm_code2 = gen2.generate();
+    // auto end2 = std::chrono::high_resolution_clock::now();
+    // std::chrono::duration<double> elapsed2 = end2 - start2;
+    // std::cout << "Poly AST time: "
+    //           << std::chrono::duration_cast<std::chrono::milliseconds>(end2 - start2).count()
+    //           << " ms\n";
+
+    // Write to file
     std::ofstream out("nasm_out.s");
     out << asm_code;
     out.close();
