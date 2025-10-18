@@ -1,89 +1,50 @@
 # x86-64 Compiler: Polymorphic vs. Tagged-Union AST
+A mini compiler in C++ that parses a small imperative language and generates x86-64 assembly, with a focus on comparing two AST architecture approaches.
 
-This project implements a mini compiler in C++ that:
-* Parses a small imperative scripting language
-* Builds an Abstract Syntax Tree (AST)
-* Generates x86 assembly from the AST
-* Compares two AST architectures:
-1. Polymorphic AST – classic base-class polymorphism with unique_ptr child nodes.
-2. Tagged-Union AST – union of node types with a manual destructor and move semantics.
-    * It uses the Tagged-Union AST Implementation for actual assembly generation 
-
-The compiler supports:
+### Features
+#### Compiler Capabilities:
 * Integer arithmetic (+, -, *, /)
 * Variable bindings (let)
-* Program exit (exit)
+* Program exit statements
 * Lexical scoping
-The focus is memory layout, performance trade-offs, and low-level C++ engineering.
 
+### AST Architectures Compared:
+1. Polymorphic AST – Classic OOP with virtual dispatch and unique_ptr for automatic memory management
+2. Tagged-Union AST – Manual union-based design with explicit move semantics (used for code generation)
 
-### AST Architectures
-Polymorphic AST
-* Base class PolyNode with derived types for literals, identifiers, expressions, let statements, and exit nodes.
-* Uses std::unique_ptr for child nodes.
-* Destructor automatically cleans up children — low overhead.
+### Performance Insights
+Benchmarking revealed:
+* Polymorphic AST: Faster construction/destruction due to automatic cleanup
+* Tagged-Union AST: Slower due to manual destructor overhead and union member moves
+* Profiling (gprof) showed node destruction and std::map lookups dominate runtime
 
-Tagged-Union AST
-* Single Node struct with a NodeType tag and union of node types.
-* Manual destructor handles active member.
-* Move constructors and assignments carefully implemented for std::unique_ptr and strings.
-* Avoids virtual dispatch but incurs destructor overhead.
+*Key Takeway*: AST design involves trade-offs between dynamic dispatch overhead, memory footprint, and move semantics complexity.
 
-### Performance & Profiling
-Benchmarking shows:
-* Tagged-Union AST: slower due to union destruction and string/unique_ptr moves.
-* Polymorphic AST: faster for node construction/destruction.
-Profiling via gprof confirms node destruction dominates runtime, with std::map lookups contributing significantly.
-* Key takeaway: AST design in a compiler involves trade-offs between dynamic dispatch, memory footprint, and move semantics.
-
-## Directory Structure
-```bash
-project-root/
-├── build/ # CMake build directory
-├── compiler_test.sh # Bash unit test script
-├── profiling.sh # Run gprof 
-├── testInput.txt # Sample input source code
-├── expectedAssembly.asm # Expected assembly output
-├── output.asm # Actual compiler output
-├── CMakeLists.txt # Project build configuration
-└── src/ # Compiler source files
-```
-
+# Quick Start
 ## Requirements 
 - Linux OS
-- `nasm` and `ld` installed.
+- `nasm`,`ld`, `cmake` 
 
-## Building the Compiler
+## Build & Run
 ```bash
-mkdir -p build
-cd build
-cmake ..
-make
+mkdir build && cd build
+cmake .. && make
 ./testy ../test_input_files/test_input_1.txt
 ```
-* Outputs benchmark times for both AST implementations.
-* Generates x86 assembly (nasm_out.s) for further inspection.
 
-## Running the Unit Test
+## Run Unit Tests:
 ```bash
 chmod +x compiler_test.sh
 ./compiler_test.sh
-```
 
-The script: 
-1. Creates a sample input file (testInput.txt).
-2. Creates the expected assembly output (expectedAssembly.asm).
-3. Runs the compiler (./build/testy) on the input file.
-4. Compares the generated nasm_out.s against the expected output.
-5. Reports success or failure with detailed differences.
+## Example
+**Input (`testInput.txt`):**
 
-## Sample Input (testInput.txt)
-```bash
 let x = 2 + 3; 
 exit x;
 ```
 
-## Expected Output (expectedAssembly.asm)
+## Generated Assembly:
 
 ```bash
 section .data    ; data section
@@ -94,7 +55,7 @@ global _start    ; global symbol _start
 
 _start:
     mov rax, 2   ; Load value 2 into register RAX
-    mov rbx, rax ; Copy RAX (2)into RBX
+    mov rbx, rax ; Copy RAX (2) into RBX
     mov rax, 3   ; Overwrite RAX WITH 3 
     add rax, rbx ; Add RBX (2) to RAX (3), Now: RAX = 5
     mov [x], rax ; Store value fo RAX (5), in global var x
@@ -107,10 +68,12 @@ _start:
 
 ```
 
-## Notes
-- The compiler script assumes the executable is named testy and that it - reads test_input.txt and outputs nasm_out.asm.
-- You can adjust the paths in compiler_test.sh if your compiler or file names differ.
-- Whitespace is normalized for reliable output comparison.
-- Designed for a local Linux environment; minor adjustments may be needed for Windows/MacOS.
-
-## x86 Compiler.
+## Directory Structure
+```bash
+project-root/
+├── build/                  # CMake build directory
+└── src/                    # Compiler source
+├── compiler_test.sh        # Unit test script
+├── profiling.sh            # gprof profiling 
+├── test_input_files/       # Test cases
+```
