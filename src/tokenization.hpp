@@ -9,9 +9,7 @@ struct Token { TokenType type; std::string value; };
 
 class Tokenizer {
 public: 
-    /* explicit prevents implicit conversions when calling constructor
-    so must write Tokenizer("...") specifically
-    */
+    //explicit prevents implicit conversions when calling constructor
     explicit Tokenizer(const std::string& input) : m_input(input) {}
 
     std::vector<Token> tokenize() {

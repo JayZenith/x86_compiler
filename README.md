@@ -1,8 +1,7 @@
-# x86-64 Compiler: Tagged-Union AST
-A mini compiler in C++ that parses a small imperative language and generates x86-64 assembly, with a focus on tagged-union AST design.
+# x86-64 Compiler
+A compiler in C++ that parses a small imperative language and generates x86-64 assembly, with a focus on tagged-union AST design.
 
 ### Features
-#### Compiler Capabilities:
 * Integer arithmetic (+, -, *, /)
 * Variable bindings (let)
 * Program exit statements
@@ -13,7 +12,6 @@ A mini compiler in C++ that parses a small imperative language and generates x86
 2. Move semantics are used for node data management.
 3. Manual destructors handle cleanup for union members.
 
-# Quick Start
 ## Requirements 
 - Linux OS
 - `nasm`,`ld`, `cmake` 
@@ -22,7 +20,7 @@ A mini compiler in C++ that parses a small imperative language and generates x86
 ```bash
 mkdir build && cd build
 cmake .. && make
-./testy ../test_input_files/test_input_1.txt --benchmark
+./testy ../test_input_files/test_input_1.txt 
 ```
 
 ## Run Unit Tests:
@@ -31,8 +29,6 @@ chmod +x compiler_test.sh
 ./compiler_test.sh
 
 ## Example
-**Input (`testInput.txt`):**
-
 let x = 2 + 3; 
 exit x;
 ```
@@ -62,6 +58,6 @@ project-root/
 ├── build/                  # CMake build directory
 └── src/                    # Compiler source
 ├── compiler_test.sh        # Unit test script
-├── profiling.sh            # gprof profiling 
+├── scripts                 # Scripts 
 ├── test_input_files/       # Test cases
 ```

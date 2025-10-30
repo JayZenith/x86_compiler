@@ -15,10 +15,10 @@ struct NodeLet { std::string name; std::unique_ptr<Node> expr; };
 struct NodeExit { std::unique_ptr<Node> expr; };
 
 // Tagged union node where compiler dosent know which member is active
-// Thus, manually call constructors and destructors 
+// so manually call constructors and destructors 
 struct Node { 
     NodeType type; 
-    union { //All occupy the same memory space with taking largest possible 
+    union { //All occupy the same memory space with space taking largest possible 
         NodeIntLit int_lit;
         NodeIdent ident;
         NodeBinExpr bin_expr;
@@ -51,11 +51,11 @@ struct Node {
     Node(const Node&) = delete;
     Node& operator=(const Node&) = delete; 
 
-    // Enable move constructor since Node contains expensive to copy members
+    // Enable move constructor since Node 
     // Pass rvalue reference to another Node and copy tag (NodeType) so new node knows which payload to construct
     // new(&int_lit) constructs a NodeIntLit object in-place at that address.
     // std::move(other.int_lit) steals the resources from the other node.
-    Node(Node&& other) noexcept : type(other.type) { //noexcept for standard contains to safely optimize reallocations (move instaed of copy knowing wont throw)
+    Node(Node&& other) noexcept : type(other.type) { //noexcept for standard containers to safely optimize reallocations (move instaed of copy knowing wont throw)
         switch (type) { // copied other's type above 
         case NodeType::IntLit: new(&int_lit) NodeIntLit(std::move(other.int_lit)); break;
         case NodeType::Ident: new(&ident) NodeIdent(std::move(other.ident)); break;
@@ -64,7 +64,6 @@ struct Node {
         case NodeType::Exit: new(&exit_stmt) NodeExit(std::move(other.exit_stmt)); break;
         }
     }
-    
 
     //Move assignment
     /* 
@@ -125,13 +124,6 @@ private:
     Token consume() { return m_tokens[m_index++]; }
 
     Node parse_expr() { 
-        //Below expands to something like std::unique_ptr<Node> lhs(new Node(parse_primary()));
-        //So constructing a new Node no heap, using move constructor as parse_primary() returns a temp (rvalue)
-        //triggers new(&int_lit) NodeIntLit(std::move(other.int_lit));
-        //-> this pointers to newly allocated Node memory (inside make_unique)
-        //-> other is temporary from parse_primary()
-        //-> so heap-allocate NOde (lhs) has same payload (NodeIntLit) as one return from parse_primary()
-
         //fuck all that, std::make_unique<Node> calls new Node(parse_primary()) triggering the Node(Node&& other) move constructor
         //so compiler sees new Node(std::move(tempNode)); that switches on type and incurs placement new to steal 
         //payload from other.tempNode is in moved-from state and its destructor runs going out of scope but dosent destroy anything
