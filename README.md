@@ -23,18 +23,13 @@ cmake .. && make
 ./testy ../test_input_files/test_input_1.txt 
 ```
 
-## Run Unit Tests:
+## Input Example
 ```bash
-chmod +x compiler_test.sh
-./compiler_test.sh
-
-## Example
 let x = 2 + 3; 
 exit x;
 ```
 
 ## Generated Assembly:
-
 ```bash
 section .data
 x dq 0           ; global variable
@@ -52,12 +47,13 @@ _start:
     syscall
 ```
 
-## Directory Structure
+## Run Unit Tests:
 ```bash
-project-root/
-├── build/                  # CMake build directory
-└── src/                    # Compiler source
-├── compiler_test.sh        # Unit test script
-├── scripts                 # Scripts 
-├── test_input_files/       # Test cases
+chmod +x compiler_test.sh
+./compiler_test.sh
+
+## Example
+let x = 2 + 3; 
+exit x;
 ```
+

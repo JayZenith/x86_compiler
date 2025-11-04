@@ -12,14 +12,14 @@ public:
     std::string generate() {
         std::ostringstream out;
 
-        // 1) Emit .data section for all variables
+        // 1).data section for all variables
         out << "section .data\n";
         for (const auto& stmt : m_program) collect_vars(stmt); //if variables exist
         for (const auto& kv : m_vars) { //go though variables 
             out << kv.first << " dq 0\n";
         }
 
-        // 2) Emit .text section
+        // 2) .text section
         out << "\nsection .text\n"
             << "global _start\n\n"
             << "_start:\n";
@@ -33,9 +33,9 @@ public:
 
 private:
     const std::vector<Node>& m_program;
-    std::unordered_map<std::string, bool> m_vars; // track variable names
+    std::unordered_map<std::string, bool> m_vars; //track variable names
 
-    // collect variable names from let statements
+    // collect variable names from let and exit statements
     void collect_vars(const Node& node) {
         switch (node.type) {
         case NodeType::Let:

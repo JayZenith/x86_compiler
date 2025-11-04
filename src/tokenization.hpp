@@ -4,7 +4,6 @@
 #include <optional>
 
 enum class TokenType { IntLit, Ident, Plus, Minus, Star, Slash, Eq, Semi, Let, Exit, Eof };
-
 struct Token { TokenType type; std::string value; };
 
 class Tokenizer {
@@ -19,7 +18,7 @@ public:
             char c = m_input[i];
             if (isspace(c)) { i++; continue; }
 
-            if (isdigit(c)) {
+            if (isdigit(c)) {  //Capture digit, not alphanumericals
                 size_t start = i;
                 while (i < m_input.size() && isdigit(m_input[i])) 
                     i++;
@@ -28,7 +27,7 @@ public:
                 continue;
             }
 
-            if (isalpha(c)) {
+            if (isalpha(c)) { //EIther "let" "exit" or identifier 
                 size_t start = i;
                 while (i < m_input.size() && isalnum(m_input[i]))
                     i++;
