@@ -40,15 +40,15 @@ private:
         switch (node.type) {
         case NodeType::Let:
             m_vars[node.let_stmt.name] = true;
-            collect_vars(*node.let_stmt.expr);
+            // collect_vars(*node.let_stmt.expr);
             break;
-        case NodeType::BinExpr:
-            collect_vars(*node.bin_expr.lhs);
-            collect_vars(*node.bin_expr.rhs);
-            break;
-        case NodeType::Exit:
-            collect_vars(*node.exit_stmt.expr);
-            break;
+        // case NodeType::BinExpr:
+        //     collect_vars(*node.bin_expr.lhs);
+        //     collect_vars(*node.bin_expr.rhs);
+        //     break;
+        // case NodeType::Exit:
+        //     collect_vars(*node.exit_stmt.expr);
+        //     break;
         default:
             break;
         }
@@ -96,11 +96,11 @@ private:
     }
 
     void gen_binexpr(std::ostringstream& out, const NodeBinExpr& expr) {
-        // lhs → rax
+        // lhs -> rax
         gen_expr(out, *expr.lhs);
         out << "    mov rbx, rax\n"; // store lhs in rbx
 
-        // rhs → rax
+        // rhs -> rax
         gen_expr(out, *expr.rhs);
 
         // combine: rbx (lhs) op rax (rhs)
